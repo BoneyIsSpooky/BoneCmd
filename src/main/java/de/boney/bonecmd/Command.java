@@ -188,8 +188,8 @@ public class Command {
                     return null;
                 }
                 Matcher m = MENTION.matcher(token);
-                while (m.find()) {
-                    arguments.put(currentParameterName, new Argument(ArgType.USER, currentParameterName, server.getMemberById(token).orElse(null)));
+                if (m.find()) {
+                    arguments.put(currentParameterName, new Argument(ArgType.USER, currentParameterName, server.getMemberById(m.group(1)).orElse(null)));
                     argsPos++;
                     continue;
                 }
