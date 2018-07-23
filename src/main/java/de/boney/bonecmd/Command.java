@@ -155,6 +155,11 @@ public class Command {
                         argsPos++;
                         continue;
                     }
+                    if (currentParameter.type == ArgType.STRING) {
+                        arguments.put(currentParameterName, new Argument(ArgType.STRING, currentParameterName, token));
+                        argsPos++;
+                        continue;
+                    }
                     if (currentParameter.optional) { continue; }
                     err[0] = "Bad argument type for non-optional parameter " + currentParameterName + ", I expected " + currentParameter.type.name();
                     return null;
@@ -169,6 +174,11 @@ public class Command {
                     Double d = Double.parseDouble(token);
                     if (currentParameter.type == ArgType.DOUBLE) {
                         arguments.put(currentParameterName, new Argument(ArgType.DOUBLE, currentParameterName, d));
+                        argsPos++;
+                        continue;
+                    }
+                    if (currentParameter.type == ArgType.STRING) {
+                        arguments.put(currentParameterName, new Argument(ArgType.STRING, currentParameterName, token));
                         argsPos++;
                         continue;
                     }
