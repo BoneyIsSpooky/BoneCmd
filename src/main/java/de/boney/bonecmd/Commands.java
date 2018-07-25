@@ -40,6 +40,7 @@ public class Commands {
     }
 
     private static void handleMessage(MessageCreateEvent event) {
+        if (!event.getMessage().getUserAuthor().isPresent() || !event.getServer().isPresent()) return;
         handleMessage(event.getMessage().getContent(), event.getApi(), event.getServer().get(), event.getMessage().getUserAuthor().get(), event.getChannel());
     }
 
