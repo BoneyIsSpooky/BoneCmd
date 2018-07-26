@@ -1,3 +1,2 @@
 jar:
-	gradle clean build jar
-.PHONY: all
+	./gradlew clean build jar
