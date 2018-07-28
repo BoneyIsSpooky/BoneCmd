@@ -2,6 +2,7 @@ package de.boney.bonecmd;
 
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.entity.permission.PermissionType;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 
@@ -25,10 +26,11 @@ public class Command {
 
     private long permissionBits = 0;
     private SpecialRestriction specialRestriction;
+    private Set<PermissionType> requiredTypes;
 
     private static BiFunction<Server, User, Long> permissionBitSupplier;
 
-    public static void setPermissionBitSupplier(BiFunction<Server, User, Long> myPermissionBitSupplier) {
+    public static void setInternalPermissionBitSupplier(BiFunction<Server, User, Long> myPermissionBitSupplier) {
         permissionBitSupplier = myPermissionBitSupplier;
     }
 
@@ -67,9 +69,18 @@ public class Command {
         return this;
     }
 
-    public Command restrict(long permissionBits) {
+    public Command restrictInternal(long permissionBits) {
         this.permissionBits = permissionBits;
         return this;
+    }
+
+    public Command restrictExternal(final Collection<PermissionType> requiredTypes) {
+        this.requiredTypes = Collections.unmodifiableSet(new HashSet<>(requiredTypes));
+        return this;
+    }
+
+    public Command restrictExternal(PermissionType...requiredTypes) {
+        return restrictExternal(Arrays.asList(requiredTypes));
     }
 
     public Command restrictSpecial(SpecialRestriction specialRestriction) {
@@ -99,19 +110,25 @@ public class Command {
     }
 
     boolean checkPermissions(Server server, User user) {
-        if (specialRestriction == null) {
-            if (permissionBits == 0) return true;
-            if (permissionBitSupplier == null) return true;
-            long userBits = permissionBitSupplier.apply(server, user);
-            if (permissionBits <= ADMIN_BITS) {
-                return (userBits & (permissionBits | ADMIN_BITS)) > 0;
-            } else {
-                return (userBits & permissionBits) == permissionBits;
-            }
+
+        if (specialRestriction != null) {
+            if (specialRestriction == SpecialRestriction.NOBODY) return false;
+            if (specialRestriction == SpecialRestriction.BOT_OWNER) return user.isBotOwner();
+            if (specialRestriction == SpecialRestriction.SERVER_OWNER) return server.getOwner().equals(user);
         }
-        if (specialRestriction == SpecialRestriction.BOT_OWNER) return user.isBotOwner();
-        if (specialRestriction == SpecialRestriction.SERVER_OWNER) return server.getOwner().equals(user);
-        return false;
+
+        if (requiredTypes != null && !requiredTypes.isEmpty()) {
+            if (!server.getAllowedPermissions(user).containsAll(requiredTypes)) return false;
+        }
+
+        if (permissionBits == 0) return true;
+        if (permissionBitSupplier == null) return true;
+        long userBits = permissionBitSupplier.apply(server, user);
+        if (permissionBits <= ADMIN_BITS) {
+            return (userBits & (permissionBits | ADMIN_BITS)) > 0;
+        } else {
+            return (userBits & permissionBits) == permissionBits;
+        }
     }
 
     String getName() {
