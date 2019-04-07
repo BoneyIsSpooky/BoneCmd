@@ -19,6 +19,7 @@ public class Command {
 
     private final static Pattern SPLIT = Pattern.compile("\"([^\"]*)\"|(\\S+)");
     private final static Pattern MENTION = Pattern.compile("^<@!?(\\d+)>$");
+    private final static Pattern CHANNEL = Pattern.compile("^<#!?(\\d+)>$");
 
     private String toolTip = "No tooltip";
     private String longToolTip = "No help";
@@ -208,7 +209,7 @@ public class Command {
                 }
             }
 
-            if (token.matches("^<@!?(\\d+)>$")) {
+            if (token.matches(MENTION.pattern())) {
                 if (currentParameter.type != ArgType.USER) {
                     if (currentParameter.optional) { continue; }
                     err[0] = "Bad argument type for non-optional parameter " + currentParameterName + ", I expected " + currentParameter.type.name();
@@ -217,6 +218,20 @@ public class Command {
                 Matcher m = MENTION.matcher(token);
                 if (m.find()) {
                     arguments.put(currentParameterName, new Argument(ArgType.USER, currentParameterName, server.getMemberById(m.group(1)).orElse(null)));
+                    argsPos++;
+                    continue;
+                }
+            }
+
+            if (token.matches(CHANNEL.pattern())) {
+                if (currentParameter.type != ArgType.CHANNEL) {
+                    if (currentParameter.optional) { continue; }
+                    err[0] = "Bad argument type for non-optional parameter " + currentParameterName + ", I expected " + currentParameter.type.name();
+                    return null;
+                }
+                Matcher m = CHANNEL.matcher(token);
+                if (m.find()) {
+                    arguments.put(currentParameterName, new Argument(ArgType.CHANNEL, currentParameterName, server.getChannelById(m.group(1)).orElse(null)));
                     argsPos++;
                     continue;
                 }
@@ -331,7 +346,7 @@ public class Command {
     }
 
     public enum ArgType {
-        LONG, DOUBLE, BOOL, STRING, USER
+        LONG, DOUBLE, BOOL, STRING, USER, CHANNEL
     }
 
     public enum HelpWarning {
