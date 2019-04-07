@@ -26,7 +26,7 @@ public class Command {
     private List<HelpWarning> warnings = new ArrayList<>();
 
     private long permissionBits = 0;
-    private SpecialRestriction specialRestriction;
+    private Set<SpecialRestriction> specialRestrictions = new HashSet<>();
     private Set<PermissionType> requiredTypes;
 
     private static BiFunction<Server, User, Long> permissionBitSupplier;
@@ -85,7 +85,7 @@ public class Command {
     }
 
     public Command restrictSpecial(SpecialRestriction specialRestriction) {
-        this.specialRestriction = specialRestriction;
+        this.specialRestrictions.add(specialRestriction);
         return this;
     }
 
@@ -112,10 +112,13 @@ public class Command {
 
     boolean checkPermissions(Server server, User user) {
 
-        if (specialRestriction != null) {
-            if (specialRestriction == SpecialRestriction.NOBODY) return false;
-            if (specialRestriction == SpecialRestriction.BOT_OWNER) return user.isBotOwner();
-            if (specialRestriction == SpecialRestriction.SERVER_OWNER) return server.getOwner().equals(user);
+        if (!specialRestrictions.isEmpty()) {
+            if (specialRestrictions.contains(SpecialRestriction.BOT_OWNER) && user.isBotOwner())
+                return true;
+            if (specialRestrictions.contains(SpecialRestriction.SERVER_OWNER) && server.getOwner().equals(user))
+                return true;
+
+            return false;
         }
 
         if (requiredTypes != null && !requiredTypes.isEmpty()) {
