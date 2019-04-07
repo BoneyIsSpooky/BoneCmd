@@ -1,6 +1,7 @@
 package de.boney.bonecmd;
 
 import org.javacord.api.DiscordApi;
+import org.javacord.api.entity.channel.ServerTextChannel;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -34,7 +35,7 @@ public class Arguments {
         return user;
     }
 
-    public TextChannel getChannel() {
+    public TextChannel getInvokingChannel() {
         return channel;
     }
 
@@ -43,7 +44,7 @@ public class Arguments {
     }
 
     public CompletableFuture<Message> reply(String str) {
-        return getChannel().sendMessage(str);
+        return getInvokingChannel().sendMessage(str);
     }
 
     public CompletableFuture<Message> reply(String str, Object...format) {
@@ -51,7 +52,7 @@ public class Arguments {
     }
 
     public CompletableFuture<Message> reply(EmbedBuilder embedBuilder) {
-        return getChannel().sendMessage(embedBuilder);
+        return getInvokingChannel().sendMessage(embedBuilder);
     }
 
     public Optional<Long> getLong(String name) {
@@ -82,5 +83,11 @@ public class Arguments {
         if (!arguments.containsKey(name)) return Optional.empty();
         if (arguments.get(name).type != Command.ArgType.USER) return Optional.empty();
         return Optional.ofNullable((User) arguments.get(name).value);
+    }
+
+    public Optional<ServerTextChannel> getChannel(String name) {
+        if (!arguments.containsKey(name)) return Optional.empty();
+        if (arguments.get(name).type != Command.ArgType.CHANNEL) return Optional.empty();
+        return Optional.ofNullable((ServerTextChannel) arguments.get(name).value);
     }
 }
