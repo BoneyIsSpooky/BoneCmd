@@ -16,6 +16,7 @@ public class Command {
     private final String name;
     private final List<Parameter> formalParams;
     private CommandTask task;
+    private boolean raw;
 
     private final static Pattern SPLIT = Pattern.compile("\"([^\"]*)\"|(\\S+)");
     private final static Pattern MENTION = Pattern.compile("^<@!?(\\d+)>$");
@@ -47,6 +48,11 @@ public class Command {
 
     public Command arg(ArgType argType, String name) {
         formalParams.add(new Parameter(argType, name, false));
+        return this;
+    }
+
+    public Command raw() {
+        this.raw = true;
         return this;
     }
 
@@ -148,6 +154,15 @@ public class Command {
     }
 
     private Map<String, Argument> buildArgumentsList(Server server, String fullCommand, String[] err) {
+
+        if (raw) {
+            HashMap<String, Argument> m = new HashMap<>();
+            if (fullCommand.length() >= name.length() + 2) {
+                m.put("raw", new Argument(ArgType.STRING, "raw", fullCommand.substring(name.length() + 2)));
+            }
+            return m;
+        }
+
         List<String> tokens = tokenize(fullCommand);
         Map<String, Argument> arguments = new HashMap<>();
 
